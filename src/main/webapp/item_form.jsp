@@ -19,7 +19,7 @@
                             <h3 class="panel-title">Create item</h3>
                         </div>
                         <div class="panel-body">
-                            <form:form action="/items/create" method="post" modelAttribute="item">
+                            <form:form action="/items/create?billId=${billId}" method="post" modelAttribute="item">
                                 <div class="form-group">
                                     Item name:<form:input class="form-control" path="name" required="required"/>
                                 </div>

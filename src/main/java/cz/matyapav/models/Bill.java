@@ -2,7 +2,7 @@ package cz.matyapav.models;
 
 import cz.matyapav.utils.Utils;
 import org.springframework.transaction.annotation.Transactional;
-/*TODO invite/add user to bill ..spise add na invite nebude cas, ten se casem dodela
+/*TODO invite/add user to getBillForm ..spise add na invite nebude cas, ten se casem dodela
   mozna request to join + approve .. jenom join ne protoze to by se pak kdokoliv pripojil a delal by tam bordel*/
 
 import javax.persistence.*;
@@ -27,12 +27,8 @@ public class Bill {
     @Column(name = "name", nullable = false)
     private String name;
 
-    //TODO prepsat na vlastni spojovaci tabulku .. potrebuju tam jmeno toho kdo to pridal...hibernate bohuzel neumi pridat field do spojovaci tabulky
-    @OneToMany(mappedBy = "primaryKey.bill", cascade=CascadeType.ALL)
-    private Set<ItemBill> itemBills = new HashSet<>();
-
-    @ManyToMany(fetch = FetchType.EAGER)
-    private Set<User> users;
+    @ManyToMany(fetch = FetchType.LAZY)
+    private Set<User> users = new HashSet<>();
 
     @Column(name="creator", nullable = false)
     private String creatorUsername;
@@ -41,7 +37,7 @@ public class Bill {
     private boolean opened;
 
     public Bill() {
-        users = new HashSet<>();
+
     }
 
     public Bill(int id, String name, String creatorUsername, boolean opened) {
@@ -49,7 +45,6 @@ public class Bill {
         this.name = name;
         this.creatorUsername = creatorUsername;
         this.opened = opened;
-        users = new HashSet<>();
     }
 
     public int getId() {
@@ -114,13 +109,5 @@ public class Bill {
             }
         }
         return false;
-    }
-
-    public Set<ItemBill> getItemBills() {
-        return itemBills;
-    }
-
-    public void setItemBills(Set<ItemBill> itemBills) {
-        this.itemBills = itemBills;
     }
 }

@@ -3,10 +3,7 @@ package cz.matyapav.utils;
 import cz.matyapav.models.Bill;
 import cz.matyapav.models.Item;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.io.Serializable;
 
 /**
@@ -15,10 +12,15 @@ import java.io.Serializable;
 @Embeddable
 public class ItemBillId implements Serializable{
 
+    public ItemBillId() {
+    }
+
     @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "item_name")
     private Item item;
 
     @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "bill_id")
     private Bill bill;
 
     @Column(name="added_by", nullable = false)

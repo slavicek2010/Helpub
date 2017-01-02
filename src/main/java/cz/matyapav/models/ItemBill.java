@@ -13,7 +13,8 @@ import javax.persistence.*;
         @AssociationOverride(name = "primaryKey.item",
                 joinColumns = @JoinColumn(name = "item_name")),
         @AssociationOverride(name = "primaryKey.bill",
-                joinColumns = @JoinColumn(name = "bill_id")) })
+                joinColumns = @JoinColumn(name = "bill_id"))
+})
 public class ItemBill {
 
     // composite-id key

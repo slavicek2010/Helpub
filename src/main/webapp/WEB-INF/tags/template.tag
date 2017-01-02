@@ -11,10 +11,10 @@
         <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
         <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet"/>
-        <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet"/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
         <link href="<%=request.getContextPath()%>/resources/styles/template.css" rel="stylesheet">
         <link href="<%=request.getContextPath()%>/resources/styles/home.css" rel="stylesheet">
-
+        <link href="<%=request.getContextPath()%>/resources/styles/bills.css" rel="stylesheet">
     </head>
 <body>
 <div id="pageheader">

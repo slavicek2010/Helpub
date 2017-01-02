@@ -7,7 +7,12 @@ import cz.matyapav.models.User;
 import cz.matyapav.models.dao.GenericDao;
 import cz.matyapav.models.validators.BillValidator;
 import cz.matyapav.models.validators.Validator;
+import cz.matyapav.services.BillService;
+import cz.matyapav.services.ItemBillService;
+import cz.matyapav.services.ItemService;
+import cz.matyapav.services.UserService;
 import cz.matyapav.utils.ItemBillId;
+import cz.matyapav.utils.StatusMessages;
 import cz.matyapav.utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -21,6 +26,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import javax.persistence.*;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -30,20 +36,18 @@ import java.util.List;
 @Controller
 public class BillController {
 
-    @Autowired
-    private GenericDao<Bill, Integer> billDao;
 
     @Autowired
-    private GenericDao<Item, String> itemDao;
+    private BillService billService;
 
     @Autowired
-    private GenericDao<ItemBill, ItemBillId> itemBillDao;
+    private UserService userService;
 
     @Autowired
-    GenericDao<User, String> userDAO;
+    private ItemService itemService;
 
-    @PersistenceContext
-    protected EntityManager entityManager;
+    @Autowired
+    private ItemBillService itemBillService;
 
     ////
 
@@ -52,7 +56,7 @@ public class BillController {
         if(request.getParameter("errors") != null){
             model.addObject("errors", request.getParameter("errors"));
         }
-        List<Bill> billsList = billDao.list();
+        List<Bill> billsList = billService.getAllBills();
         model.addObject("listBills", billsList);
         model.setViewName("bills");
         if(Utils.loggedUserIsAdmin()){
@@ -63,21 +67,23 @@ public class BillController {
     }
 
     @RequestMapping(value = "/bills/edit", method = RequestMethod.GET)
-    public ModelAndView bill(HttpServletRequest request, ModelAndView model, RedirectAttributes redirectAttributes) {
-        List<String> errors = new ArrayList<>();
+    public ModelAndView getBillForm(HttpServletRequest request, ModelAndView model, RedirectAttributes redirectAttributes) {
+        StatusMessages statusMessages = new StatusMessages();
 
         try {
             int id = Integer.parseInt(request.getParameter("id"));
-            Bill bill = billDao.read(id);
+            Bill bill = billService.getBill(id);
             if(bill == null){
                 model.setViewName("redirect:/bills");
-                Utils.addError(errors, "Bill not found.", redirectAttributes);
+                statusMessages.addError("Bill not found");
+                redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
                 return model;
             }
-            User loggedUser = userDAO.read(Utils.getLoggedUser().getUsername());
+            User loggedUser = userService.getUser(Utils.getLoggedUser().getUsername());
             if(!loggedUser.isInBill(bill) && !Utils.loggedUserIsAdmin()){
                 model.setViewName("redirect:/bills");
-                Utils.addError(errors, "You don't have permission to edit this bill.", redirectAttributes);
+                statusMessages.addError("You don't have permission to edit this bill.");
+                redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
                 return model;
             }
 
@@ -86,98 +92,76 @@ public class BillController {
         } catch (NumberFormatException e) {
             e.printStackTrace();
             model.setViewName("redirect:/bills");
-            Utils.addError(errors, "Bill not found.", redirectAttributes);
+            statusMessages.addError("Bill not found");
+            redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
             return model;
         }
     }
 
     @RequestMapping(value = "/bills/edit", method = RequestMethod.POST)
     public ModelAndView editBill(@ModelAttribute("Bill") Bill bill, HttpServletRequest request, RedirectAttributes redirectAttributes) {
-        List<String> messages = new ArrayList<>();
-        List<String> errors = new ArrayList<>();
         ModelAndView model = new ModelAndView();
         //validation conditions
-        Validator<Bill> validator = new BillValidator();
-        if(!validator.validate(bill)){
-            request.setAttribute("errors", validator.getErrorMessages());
+        StatusMessages statusMessages = billService.editBill(bill);
+        if(statusMessages.hasErrors()){
+            redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
             setPropertiesToEditBillForm(model, bill);
             return model;
         }
-        Bill bill1 = billDao.read(bill.getId());
-        User loggedUser = userDAO.read(Utils.getLoggedUser().getUsername());
-        if(!loggedUser.isInBill(bill1) && !Utils.loggedUserIsAdmin()){
-            model.setViewName("redirect:/bills");
-            Utils.addError(errors, "You don't have permission to edit this bill.", redirectAttributes);
-            return model;
+        if(statusMessages.hasMessages()){
+            redirectAttributes.addFlashAttribute("messages", statusMessages.getMessages());
         }
-        if(bill1 != null) {
-            bill1.setName(bill.getName());
-            billDao.update(bill1);
-        }
-        Utils.addMessage(messages, "Bill successfully edited.", redirectAttributes);
-        return new ModelAndView("redirect:/bills/show?id="+bill1.getId());
+
+        return new ModelAndView("redirect:/bills/show?id="+bill.getId());
     }
 
     @RequestMapping(value = "/bills/addItem", method = RequestMethod.POST)
     public ModelAndView addItem(@ModelAttribute("Item") Item item, HttpServletRequest request, RedirectAttributes redirectAttributes){
         ModelAndView model = new ModelAndView("redirect:/bills");
 
-        List<String> errors = new ArrayList<>();
-        Bill billDB = billDao.read(Integer.parseInt(request.getParameter("id")));
-        if(billDB == null){
-            Utils.addError(errors, "Bill not found", redirectAttributes);
-            return model;
+        try {
+            int billId = Integer.parseInt(request.getParameter("id"));
+            double price = Double.parseDouble(request.getParameter("price"));
+            StatusMessages statusMessages = billService.addItem(item, billId, price);
+            model.setViewName("redirect:/bills/show?id="+billId);
+            if(statusMessages.hasErrors()){
+                redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
+                return model;
+            }
+            if(statusMessages.hasMessages()){
+                redirectAttributes.addFlashAttribute("messages", statusMessages.getMessages());
+            }
+        }catch (NumberFormatException e){
+            StatusMessages statusMessages = new StatusMessages();
+            statusMessages.addError("Bill not found.");
+            redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
         }
-        //connect item and bill
-        ItemBill itemBill = new ItemBill();
-        ItemBillId itemBillId = new ItemBillId();
-        itemBillId.setItem(item);
-        itemBillId.setBill(billDB);
-        itemBillId.setAddedBy(Utils.getLoggedUser().getUsername());
-        itemBill.setPrimaryKey(itemBillId);
-        itemBill.setPrice(Double.parseDouble(request.getParameter("price")));
-
-        ItemBill itemBillDB = itemBillDao.read(itemBillId);
-        if(itemBillDB != null){
-            int actualQuantity = itemBillDB.getQuantity();
-            itemBill.setQuantity(actualQuantity + 1);
-            itemBillDao.update(itemBill);
-        }else{
-            itemBill.setQuantity(1);
-            itemBillDao.create(itemBill);
-        }
-        model.setViewName("redirect:/bills/show?id="+billDB.getId());
         return model;
-
     }
 
     @RequestMapping(value = "/bills/removeItem", method = RequestMethod.GET)
     public ModelAndView removeItem(HttpServletRequest request, RedirectAttributes redirectAttributes){
         ModelAndView model = new ModelAndView("redirect:/bills");
 
-        List<String> errors = new ArrayList<>();
-        Bill billDB = billDao.read(Integer.parseInt(request.getParameter("id")));
-        if(billDB == null){
-            Utils.addError(errors, "Bill not found", redirectAttributes);
-            return model;
+        try {
+            int billId = Integer.parseInt(request.getParameter("id"));
+            String itemName = request.getParameter("item");
+            String user = request.getParameter("user");
+            StatusMessages statusMessages = billService.removeItem(itemName, billId, user);
+            model.setViewName("redirect:/bills/show?id="+billId);
+            if(statusMessages.hasErrors()){
+                redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
+                return model;
+            }
+            if(statusMessages.hasMessages()){
+                redirectAttributes.addFlashAttribute("messages", statusMessages.getMessages());
+            }
+        }catch (NumberFormatException e){
+            StatusMessages statusMessages = new StatusMessages();
+            statusMessages.addError("Bill not found.");
+            redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
         }
-        model.setViewName("redirect:/bills/show?id="+billDB.getId());
 
-        Item itemDB = itemDao.read(request.getParameter("item"));
-        if(itemDB == null){
-            Utils.addError(errors, "Item not found", redirectAttributes);
-            return model;
-        }
-
-        //connect item and bill
-        ItemBillId itemBillId = new ItemBillId();
-        itemBillId.setItem(itemDB);
-        itemBillId.setBill(billDB);
-        itemBillId.setAddedBy(Utils.getLoggedUser().getUsername());
-
-        itemBillDao.delete(itemBillId);
-
-        model.setViewName("redirect:/bills/show?id="+billDB.getId());
         return model;
 
     }
@@ -186,136 +170,145 @@ public class BillController {
     public ModelAndView increaseQuantity(HttpServletRequest request, RedirectAttributes redirectAttributes) {
         ModelAndView model = new ModelAndView("redirect:/bills");
 
-        List<String> errors = new ArrayList<>();
-        Bill billDB = billDao.read(Integer.parseInt(request.getParameter("id")));
-        if (billDB == null) {
-            Utils.addError(errors, "Bill not found", redirectAttributes);
-            return model;
-        }
-        model.setViewName("redirect:/bills/show?id="+billDB.getId());
-
-        Item itemDB = itemDao.read(request.getParameter("item"));
-        if(itemDB == null){
-            Utils.addError(errors, "Item not found", redirectAttributes);
-            return model;
-        }
-
-        ItemBillId itemBillId = new ItemBillId();
-        itemBillId.setItem(itemDB);
-        itemBillId.setBill(billDB);
-        itemBillId.setAddedBy(Utils.getLoggedUser().getUsername());
-
-        ItemBill itemBillDB = itemBillDao.read(itemBillId);
-        if(itemBillDB != null){
-            int actualQuantity = itemBillDB.getQuantity();
+        try{
+            int billId = Integer.parseInt(request.getParameter("id"));
+            String itemName = request.getParameter("item");
             int howMuch = Integer.parseInt(request.getParameter("howMuch"));
-            if(howMuch + actualQuantity <= 0){
-                //remove item
-                return removeItem(request, redirectAttributes);
+            String user = request.getParameter("user");
+            StatusMessages statusMessages = billService.increaseItemQuantity(billId, itemName, user, howMuch);
+            model.setViewName("redirect:/bills/show?id="+billId);
+            if(statusMessages.hasErrors()){
+                redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
+                return model;
             }
-            itemBillDB.setQuantity(actualQuantity + howMuch);
-            itemBillDao.update(itemBillDB);
-        }else{
-            Utils.addError(errors, "Item connection to specified bill was not found", redirectAttributes);
+            if(statusMessages.hasMessages()){
+                redirectAttributes.addFlashAttribute("messages", statusMessages.getMessages());
+            }
+
+        }catch (NumberFormatException e){
+            StatusMessages statusMessages = new StatusMessages();
+            statusMessages.addError("Bill not found.");
+            redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
         }
         return model;
     }
 
     @RequestMapping(value = "/bills/create", method = RequestMethod.GET)
-    public ModelAndView bill(ModelAndView model) {
+    public ModelAndView showCreateBillForm(ModelAndView model) {
         Bill bill = new Bill();
         setPropertiesToCreateBillForm(model, bill);
         return model;
     }
 
     @RequestMapping(value = "/bills/create", method = RequestMethod.POST)
-    public ModelAndView addUser(@ModelAttribute("Bill") Bill bill, HttpServletRequest request) {
+    public ModelAndView addUser(@ModelAttribute("Bill") Bill bill, HttpServletRequest request, RedirectAttributes redirectAttributes) {
         //validation conditions
-        Validator<Bill> validator = new BillValidator();
-        if(!validator.validate(bill)){
-            request.setAttribute("errors", validator.getErrorMessages());
+        StatusMessages statusMessages = billService.createBill(bill);
+        if(statusMessages.hasErrors()){
+            request.setAttribute("errors", statusMessages.getErrors());
             ModelAndView model = new ModelAndView();
             setPropertiesToCreateBillForm(model, bill);
             return model;
         }
-        //create bill
-        bill.setOpened(true);
-        User user = userDAO.read(bill.getCreatorUsername());
-        bill.getUsers().add(user);
-
-        billDao.create(bill);
-        ModelAndView model = new ModelAndView();
-        model.setViewName("redirect:/bills/show?id="+bill.getId());
-        return model;
+        if(statusMessages.hasMessages()){
+            redirectAttributes.addFlashAttribute("messages", statusMessages.getMessages());
+        }
+        return new ModelAndView("redirect:/bills/show?id="+bill.getId());
     }
 
     @RequestMapping(value = "/bills/show", method = RequestMethod.GET)
     public ModelAndView showBill(HttpServletRequest request, RedirectAttributes redirectAttributes) {
-        List<String> errors = new ArrayList<>();
+        StatusMessages statusMessages = new StatusMessages();
         ModelAndView model = new ModelAndView();
         try {
             int id = Integer.parseInt(request.getParameter("id"));
-            Bill bill = billDao.read(id);
+            Bill bill = billService.getBill(id);
             if(bill == null){
                 model.setViewName("redirect:/bills");
-                Utils.addError(errors, "Bill not found.", redirectAttributes);
+                statusMessages.addError("Bill not found.");
+                redirectAttributes.addFlashAttribute("errors", redirectAttributes);
                 return model;
             }
-            User loggedUser = userDAO.read(Utils.getLoggedUser().getUsername());
-            if(!loggedUser.isInBill(bill)){
+            User loggedUser = userService.getUser(Utils.getLoggedUser().getUsername());
+            if(!Utils.loggedUserIsAdmin() && !loggedUser.isInBill(bill)){
                 model.setViewName("redirect:/bills");
-                Utils.addError(errors, "You don't have permission to see this bill.", redirectAttributes);
+                statusMessages.addError("You don't have permission to see this bill.");
+                redirectAttributes.addFlashAttribute("errors", redirectAttributes);
                 return model;
             }
             model.setViewName("bill_show");
             model.addObject("bill", bill);
 
-            String hql = "select ib from ItemBill ib where ib.id.bill.id = (:billId)";
-            Query query = entityManager.createQuery(hql);
-            query.setParameter("billId", bill.getId());
-            List<ItemBill> billItems = query.getResultList();
+            HashMap<String, List<ItemBill>> billItems = itemBillService.getBillItemsGroupedByUsernames(bill.getId());
+            HashMap<String, Double> particularPricesForUsers = itemBillService.getParticularPriceSumsGroupedByUsernames(bill.getId());
 
+            model.addObject("admin", Utils.loggedUserIsAdmin());
             model.addObject("billItems", billItems);
+            model.addObject("particularPrices", particularPricesForUsers);
             model.addObject("loggedUser", loggedUser);
             model.addObject("item", new Item());
-            model.addObject("items", itemDao.list());
+            model.addObject("items", itemService.getAllItems());
+            model.addObject("total", itemBillService.getBillTotalPrice(bill.getId()));
             return model;
         } catch (NumberFormatException e) {
             e.printStackTrace();
             model.setViewName("redirect:/bills");
-            Utils.addError(errors, "Bill not found.", redirectAttributes);
+            statusMessages.addError("Bill not found.");
+            redirectAttributes.addFlashAttribute("errors", redirectAttributes);
             return model;
         }
     }
 
     @RequestMapping(value = "/bills/delete", method = RequestMethod.GET)
     @Transactional
-    public ModelAndView deleteUser(HttpServletRequest request, RedirectAttributes redirectAttributes) {
-        List<String> errors = new ArrayList<>();
-        List<String> messages = new ArrayList<>();
+    public ModelAndView deleteBill(HttpServletRequest request, RedirectAttributes redirectAttributes) {
         ModelAndView model = new ModelAndView("redirect:/bills");
         try {
             int id = Integer.parseInt(request.getParameter("id"));
-            Bill bill = billDao.read(id);
-            if(bill != null){
-                for(User user : bill.getUsers()){
-                    user.removeBill(bill);
-                    userDAO.update(user);
-                }
-
-                entityManager.createQuery("DELETE from ItemBill ib where ib.id.bill.id = (:bill_id)").setParameter("bill_id", bill.getId()).executeUpdate();
-
-                billDao.delete(id);
-                Utils.addMessage(messages, "Bill successfully deleted", redirectAttributes);
-            }else{
-                Utils.addError(errors, "Bill not found.", redirectAttributes);
+            StatusMessages statusMessages = billService.deleteBill(id);
+            if(statusMessages.hasErrors()){
+                redirectAttributes.addFlashAttribute("errors",statusMessages.getErrors());
+                return model;
+            }
+            if(statusMessages.hasMessages()){
+                redirectAttributes.addFlashAttribute("messages", statusMessages.getMessages());
             }
         }catch (NumberFormatException e){
             e.printStackTrace();
-            Utils.addError(errors, "Bill not found.", redirectAttributes);
+            StatusMessages statusMessages = new StatusMessages();
+            statusMessages.addError("Bill not found.");
+            redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
         }
         return model;
     }
+
+    @RequestMapping(value = "/bills/changeItemPrice", method = RequestMethod.GET)
+    public ModelAndView changeItemsPrice(HttpServletRequest request, RedirectAttributes redirectAttributes){
+        ModelAndView model = new ModelAndView("redirect:/bills");
+
+        try{
+            int billId = Integer.parseInt(request.getParameter("id"));
+            String itemName = request.getParameter("item");
+            double newPrice = Double.parseDouble(request.getParameter("newPrice"));
+            String user = request.getParameter("user");
+            StatusMessages statusMessages = billService.changeItemsPrice(billId, itemName, user, newPrice);
+            model.setViewName("redirect:/bills/show?id="+billId);
+            if(statusMessages.hasErrors()){
+                redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
+                return model;
+            }
+            if(statusMessages.hasMessages()){
+                redirectAttributes.addFlashAttribute("messages", statusMessages.getMessages());
+            }
+
+        }catch (NumberFormatException e){
+            StatusMessages statusMessages = new StatusMessages();
+            statusMessages.addError("Bill not found.");
+            redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
+        }
+        return model;
+    }
+
 
     private void setPropertiesToCreateBillForm(ModelAndView model, Bill bill){
         model.addObject("bill", bill);

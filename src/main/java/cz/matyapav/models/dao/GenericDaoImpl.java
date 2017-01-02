@@ -21,7 +21,6 @@ import java.util.List;
 public class GenericDaoImpl<T, PK extends Serializable>
         implements GenericDao<T, PK> {
 
-    protected Logger logger;
     protected Class<T> entityClass;
 
     @PersistenceContext
@@ -29,13 +28,11 @@ public class GenericDaoImpl<T, PK extends Serializable>
 
     public GenericDaoImpl(Class<T> entityClass) {
         this.entityClass = entityClass;
-        logger = Logger.getLogger(entityClass);
     }
 
     @Override
     public T create(T t) {
         this.entityManager.persist(t);
-        logger.info("Successfully created");
         return t;
     }
 
@@ -47,7 +44,6 @@ public class GenericDaoImpl<T, PK extends Serializable>
     @Override
     public void update(T t) {
         this.entityManager.merge(t);
-        logger.info("Successfully updated");
     }
 
     @Override
@@ -55,10 +51,8 @@ public class GenericDaoImpl<T, PK extends Serializable>
         T obj = this.entityManager.find(entityClass, id);
         if (obj != null) {
             this.entityManager.remove(obj);
-            logger.info("Successfully deleted");
             return true;
         }
-        logger.info("Not found failed to delete.");
         return false;
     }
 

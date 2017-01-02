@@ -1,7 +1,9 @@
 package cz.matyapav.controller;
 
+import com.sun.xml.internal.ws.api.message.Packet;
 import cz.matyapav.models.User;
 import cz.matyapav.models.dao.GenericDao;
+import cz.matyapav.utils.StatusMessages;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,28 +25,25 @@ public class LoginController {
     @Autowired
     GenericDao<User, String> userDao;
 
-    List<String> messages = new ArrayList<>();
-    List<String> errors = new ArrayList<>();
-
 
     @RequestMapping(value = "/login", method = RequestMethod.GET)
     public ModelAndView login(@RequestParam(value = "error", required = false) String error,
                               @RequestParam(value = "logout", required = false) String logout, HttpServletRequest request) {
 
+        StatusMessages statusMessages = new StatusMessages();
         ModelAndView model = new ModelAndView();
         if(request.getParameter("messages") != null){
             model.addObject("messages", request.getParameter("messages"));
         }
         if (error != null) {
-            errors.clear();
-            errors.add("Invalid username or password.");
-            model.addObject("errors", errors);
+
+            statusMessages.addError("Invalid username or password.");
+            model.addObject("errors", statusMessages.getErrors());
         }
 
         if (logout != null) {
-            messages.clear();;
-            messages.add("You've been logged out successfully.");
-            model.addObject("messages", messages);
+            statusMessages.addMessage("You've been logged out successfully.");
+            model.addObject("messages", statusMessages.getMessages());
         }
         model.setViewName("login");
 

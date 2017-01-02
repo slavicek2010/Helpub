@@ -20,7 +20,7 @@ public class Item {
 
     private ItemTypes type;
 
-    @OneToMany(mappedBy = "primaryKey.item", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "primaryKey.item", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<ItemBill> itemBills = new HashSet<>();
 
     public Item(){
@@ -59,4 +59,5 @@ public class Item {
     public String toString() {
         return name;
     }
+
 }

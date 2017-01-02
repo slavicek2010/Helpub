@@ -3,7 +3,8 @@ package cz.matyapav.config;
 import cz.matyapav.models.*;
 import cz.matyapav.models.dao.GenericDao;
 import cz.matyapav.models.dao.GenericDaoImpl;
-import cz.matyapav.utils.ItemBillId;
+import cz.matyapav.models.dao.ItemBillDaoImpl;
+import cz.matyapav.services.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.instrument.classloading.InstrumentationLoadTimeWeaver;
@@ -55,9 +56,19 @@ public class JPAConfig {
         return new GenericDaoImpl<>(User.class);
     }
 
+    @Bean(name = "userService")
+    public UserService getUserService(){
+        return new UserService();
+    }
+
     @Bean(name = "userRoleDao")
     public GenericDaoImpl<UserRole, String> getUserRoleDao() {
         return new GenericDaoImpl<>(UserRole.class);
+    }
+
+    @Bean(name = "userRoleService")
+    public UserRoleService getUserRoleService(){
+        return new UserRoleService();
     }
 
     @Bean(name = "billDao")
@@ -65,13 +76,28 @@ public class JPAConfig {
         return new GenericDaoImpl<>(Bill.class);
     }
 
+    @Bean(name = "billService")
+    public BillService getBillService(){
+        return new BillService();
+    }
+
     @Bean(name = "itemDao")
     public GenericDaoImpl<Item, String> getItemDao() {
         return new GenericDaoImpl<>(Item.class);
     }
 
+    @Bean(name = "itemService")
+    public ItemService getItemService(){
+        return new ItemService();
+    }
+
     @Bean(name = "itemBillDao")
-    public GenericDaoImpl<ItemBill, ItemBillId> getItemBillDao(){
-        return new GenericDaoImpl<>(ItemBill.class);
+    public ItemBillDaoImpl getItemBillDao(){
+        return new ItemBillDaoImpl();
+    }
+
+    @Bean(name = "itemBillService")
+    public ItemBillService getItemBillService(){
+        return new ItemBillService();
     }
 }

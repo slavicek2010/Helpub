@@ -4,7 +4,6 @@ import cz.matyapav.models.enums.Roles;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -31,16 +30,5 @@ public class Utils {
         }
         return isAdmin;
     }
-
-    public static void addError(List<String> errors, String error, RedirectAttributes redirectAttributes){
-        errors.add(error);
-        redirectAttributes.addFlashAttribute("errors", errors);
-    }
-
-    public static void addMessage(List<String> messages, String message, RedirectAttributes redirectAttributes){
-        messages.add(message);
-        redirectAttributes.addFlashAttribute("messages", messages);
-    }
-
 
 }

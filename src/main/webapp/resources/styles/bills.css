@@ -1,0 +1,29 @@
+.number-input{
+    width: 50px;
+}
+
+.item-info{
+    width: 20%;
+}
+
+.increase-quantity-form, .change-item-price-form{
+    width: 35%;
+    margin: 0px;
+}
+
+.item-info-wrapper{
+    width: 100%;
+    border: 1px solid black;
+    padding: 2px;
+    display: flex;
+    align-items: center;
+}
+
+.item-quantity{
+    font-size: 16px;
+    width: 10%;
+}
+
+#remove-button{
+    width: 50px;
+}

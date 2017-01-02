@@ -1,6 +1,7 @@
 package cz.matyapav.models;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,7 +10,7 @@ import java.util.List;
  */
 @Entity
 @Table(name = "roles")
-public class UserRole {
+public class UserRole implements Serializable {
 
 
     @ManyToMany(mappedBy = "roles")

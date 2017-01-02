@@ -21,18 +21,34 @@
                         <a href="/bills/edit?id=${bill.id}">Edit name</a>
                         &nbsp;&nbsp;&nbsp;&nbsp;
                     </c:if>
+                    Total: ${total} CZK
                 </div>
                 <div class="panel-body" style="min-height: 500px">
-                    <c:forEach var="billItem" items="${billItems}">
-                        ${billItem.addedBy} : ${billItem.item.name} ${billItem.price} CZK ${billItem.quantity}
-                        <form action="/bills/increaseQuantity" method="put">
-                            <input type="hidden" name="id" value="${bill.id}"/>
-                            <input type="hidden" name="item" value="${billItem.item.name}"/>
-                            <input type="number" name="howMuch" value="0" min="${-billItem.quantity}" required/>
-                            <input type="submit" class="btn btn-small btn-success" value="Change quantity">
-                            <a href="/bills/removeItem?id=${bill.id}&item=${billItem.item.name}" class="btn btn-small btn-danger">Remove</a>
-                        </form>
-
+                    <c:forEach items="${billItems}" var="billsMapRecord">
+                       ${billsMapRecord.key} ( ${particularPrices.get(billsMapRecord.key)} CZK)
+                        <c:forEach var="billItem" items="${billsMapRecord.value}">
+                            <div class="item-info-wrapper">
+                                <span class="item-quantity">${billItem.quantity} x</span>
+                                <span class="item-info"> ${billItem.item.name} ${billItem.price} CZK </span> <br>
+                                <form action="/bills/increaseQuantity" method="put" class="increase-quantity-form">
+                                    <input type="hidden" name="id" value="${bill.id}"/>
+                                    <input type="hidden" name="item" value="${billItem.item.name}"/>
+                                    <input type="hidden" name="user" value="${billItem.addedBy}"/>
+                                    <input type="number" class="number-input" name="howMuch" value="0" min="${-billItem.quantity}" required/>
+                                    <input type="submit" class="btn btn-small btn-success" value="Change quantity">
+                                </form>
+                                <form action="/bills/changeItemPrice" method="put" class="change-item-price-form">
+                                    <input type="hidden" name="id" value="${bill.id}"/>
+                                    <input type="hidden" name="item" value="${billItem.item.name}"/>
+                                    <input type="hidden" name="user" value="${billItem.addedBy}"/>
+                                    <input type="number" class="number-input" name="newPrice" value="0" min="0.01" step="0.01" required/>
+                                    <input type="submit" class="btn btn-small btn-success" value="Change price">
+                                </form>
+                                <a href="/bills/removeItem?id=${bill.id}&item=${billItem.item.name}&user=${billItem.addedBy}" id="remove-button" class="btn btn-small btn-danger">
+                                    <i class="fa fa-2x fa-trash" aria-hidden="true"></i>
+                                </a>
+                            </div>
+                        </c:forEach>
                     </c:forEach>
                 </div>
             </div>
@@ -49,12 +65,12 @@
                 </div>
                 <div class="form-group">
                     Price:
-                    <input type="number" step="0.01" class="form-control" name="price" required/>
+                    <input type="number" step="0.01" min="0.01" class="form-control" name="price" required/>
                 </div>
                 <input type="submit" class="btn btn-small btn-success btn-block" value="Add">
             </form:form>
             Item not in the list?
-            <a href="/items/create">Add it here!</a>
+            <a href="/items/create?billId=${bill.id}">Add it here!</a>
         </div>
     </jsp:body>
 </t:template>

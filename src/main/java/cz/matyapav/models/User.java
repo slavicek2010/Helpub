@@ -3,6 +3,7 @@ package cz.matyapav.models;
 import cz.matyapav.utils.Utils;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.Set;
  */
 @Entity
 @Table(name = "User")
-public class User {
+public class User implements Serializable{
 
     @Id
     @Column(name = "username", nullable = false, length = 40, unique = true)
@@ -34,7 +35,7 @@ public class User {
     @Transient
     private String passwordRetype;
 
-    @ManyToMany(mappedBy = "users", fetch = FetchType.EAGER, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH})
+    @ManyToMany(mappedBy = "users", fetch = FetchType.EAGER)
     private Set<Bill> bills = new HashSet<>();
 
     @ManyToMany
