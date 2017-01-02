@@ -1,0 +1,16 @@
+#pageheader{
+    text-align: center;
+    height: 50px;
+    background-color: #a9a9a9;
+}
+
+#pagefooter{
+    text-align: center;
+    height: 30px;
+    background-color: #a9a9a9;
+}
+
+#body{
+    min-height: 800px;
+    text-align: center;
+}

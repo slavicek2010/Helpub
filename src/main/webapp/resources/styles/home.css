@@ -1,0 +1,10 @@
+.half{
+    width: 50%;
+    padding: 20px;
+    background-color: darkgrey;
+    float: left;
+}
+
+.half .second{
+
+}
