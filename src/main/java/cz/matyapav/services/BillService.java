@@ -11,9 +11,11 @@ import cz.matyapav.utils.ItemBillId;
 import cz.matyapav.utils.StatusMessages;
 import cz.matyapav.utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -37,6 +39,17 @@ public class BillService {
         return billDao.list();
     }
 
+    public List<Bill> getBillsInWhichIsUserPartOf(User user){
+        List<Bill> allBills = billDao.list();
+        List<Bill> result = new ArrayList<>();
+        for (Bill bill : allBills) {
+            if(bill.containsUserWithUsername(user.getUsername())){
+                result.add(bill);
+            }
+        }
+        return result;
+    }
+
     public Bill getBill(int id){
         return billDao.read(id);
     }
@@ -46,12 +59,20 @@ public class BillService {
         StatusMessages statusMessages = new StatusMessages();
         Validator<Bill> validator = new BillValidator();
         if(!validator.validate(bill)){
+            statusMessages.addMultipleErrors(validator.getErrorMessages());
             return statusMessages;
         }
         //create getBillForm
         bill.setOpened(true);
         User user = userService.getUser(bill.getCreatorUsername());
         bill.getUsers().add(user);
+
+        //encrypt created/edited password
+        if(bill.isLocked() && bill.getPassword() != null) {
+            BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+            String hashedPassword = passwordEncoder.encode(bill.getPassword());
+            bill.setPassword(hashedPassword);
+        }
 
         billDao.create(bill);
 
@@ -74,6 +95,16 @@ public class BillService {
         }
         if(bill1 != null) {
             bill1.setName(bill.getName());
+            bill1.setLocked(bill.isLocked());
+            if(bill.isLocked() && bill.getPassword() != null) {
+                if(!bill1.getCreatorUsername().equals(loggedUser.getUsername())){
+                    statusMessages.addError("Only bill creator can update security options");
+                    return statusMessages;
+                }
+                BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+                String hashedPassword = passwordEncoder.encode(bill.getPassword());
+                bill1.setPassword(hashedPassword);
+            }
             billDao.update(bill1);
         }
         statusMessages.addMessage("Bill successfully edited.");
@@ -87,7 +118,10 @@ public class BillService {
             statusMessages.addError("Bill not found");
             return statusMessages;
         }
-
+        if(!billDB.isOpened()){
+            statusMessages.addError("Can't add item, because bill is CLOSED.");
+            return statusMessages;
+        }
         //connect showItemForm and getBillForm
         ItemBill itemBill = new ItemBill();
         ItemBillId itemBillId = new ItemBillId();
@@ -155,6 +189,10 @@ public class BillService {
             statusMessages.addError("Bill not found.");
             return statusMessages;
         }
+        if(!billDB.isOpened()){
+            statusMessages.addError("Can't change items quantity, because bill is CLOSED.");
+            return statusMessages;
+        }
 
         Item itemDB = itemService.getItem(itemName);
         if(itemDB == null){
@@ -210,6 +248,10 @@ public class BillService {
             statusMessages.addError("Bill not found.");
             return statusMessages;
         }
+        if(!billDB.isOpened()){
+            statusMessages.addError("Can't change items price, because bill is CLOSED.");
+            return statusMessages;
+        }
 
         Item itemDB = itemService.getItem(itemName);
         if(itemDB == null){
@@ -232,6 +274,98 @@ public class BillService {
             itemBillService.updateItemBill(itemBillDB);
         }else{
             statusMessages.addError("Item connection to specified bill was not found.");
+        }
+        return statusMessages;
+    }
+
+    public StatusMessages addLoggedUserToBill(Bill bill){
+        StatusMessages statusMessages = new StatusMessages();
+        Bill billDB = getBill(bill.getId());
+        if (billDB == null) {
+            statusMessages.addError("Bill not found.");
+            return statusMessages;
+        }
+        if(!billDB.isOpened()){
+            statusMessages.addError("Can't join bill, because bill is CLOSED.");
+            return statusMessages;
+        }
+        User loggedUser = userService.getUser(Utils.getLoggedUser().getUsername());
+        if(!loggedUser.isInBill(billDB) ) {
+            if (billDB.isLocked() && !Utils.loggedUserIsAdmin()) {
+                String password = bill.getPassword();
+                BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+                if (passwordEncoder.matches(password, billDB.getPassword())) {
+                    billDB.addUser(loggedUser);
+                    billDao.update(billDB);
+                    statusMessages.addMessage("User successfully added to bill.");
+                    return statusMessages;
+                } else {
+                    statusMessages.addError("Password is not correct.");
+                    return statusMessages;
+                }
+            } else {
+                billDB.addUser(loggedUser);
+                billDao.update(billDB);
+                statusMessages.addMessage("User successfully added to bill.");
+                return statusMessages;
+            }
+        }
+        statusMessages.addMessage("User is already connected with bill.");
+        return statusMessages;
+    }
+
+    public StatusMessages removeLoggedUserFromBill(Bill bill){
+        StatusMessages statusMessages = new StatusMessages();
+        Bill billDB = getBill(bill.getId());
+        if (billDB == null) {
+            statusMessages.addError("Bill not found.");
+            return statusMessages;
+        }
+        User loggedUser = userService.getUser(Utils.getLoggedUser().getUsername());
+        if(loggedUser.getUsername().equals(billDB.getCreatorUsername())){
+            statusMessages.addError("You can't leave this bill, because you have created it.");
+            return statusMessages;
+        }
+        if(loggedUser.isInBill(billDB)) {
+            billDB.removeUserByUserName(loggedUser.getUsername());
+            billDao.update(billDB);
+            statusMessages.addMessage("User successfully removed from bill.");
+            return statusMessages;
+        }
+        statusMessages.addError("User is not connected with this bill.");
+        return statusMessages;
+    }
+
+    public StatusMessages closeBill(int id) {
+        StatusMessages statusMessages = new StatusMessages();
+        Bill bill = getBill(id);
+        if(bill != null){
+            if(!bill.getCreatorUsername().equals(Utils.getLoggedUser().getUsername())){
+                statusMessages.addError("Only bill creator can close bill.");
+                return statusMessages;
+            }
+            bill.setOpened(false);
+            billDao.update(bill);
+            statusMessages.addMessage("Bill successfully closed");
+        }else{
+            statusMessages.addError("Bill not found.");
+        }
+        return statusMessages;
+    }
+
+    public StatusMessages reopenBill(int id) {
+        StatusMessages statusMessages = new StatusMessages();
+        Bill bill = getBill(id);
+        if(bill != null){
+            if(!bill.getCreatorUsername().equals(Utils.getLoggedUser().getUsername())){
+                statusMessages.addError("Only bill creator can close bill.");
+                return statusMessages;
+            }
+            bill.setOpened(true);
+            billDao.update(bill);
+            statusMessages.addMessage("Bill successfully closed");
+        }else{
+            statusMessages.addError("Bill not found.");
         }
         return statusMessages;
     }

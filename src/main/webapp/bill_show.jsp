@@ -12,14 +12,22 @@
 <t:template>
     <jsp:body>
         <h1>Bill detail</h1>
+        <c:if test="${!bill.opened}">
+            <h2 style="color: red">Bill is CLOSED</h2>
+        </c:if>
         <a href="/bills">Back to bills list</a><br>
+        Connected users:
+        <c:forEach items="${billUsers}" var="user">
+            |${user.username}|
+        </c:forEach>
+        <br>
         <div class="half">
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h3 class="panel-title">Bill - ${bill.name}</h3>
                     <c:if test="${admin || loggedUser.isInBill(bill)}">
-                        <a href="/bills/edit?id=${bill.id}">Edit name</a>
-                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        <a href="/bills/edit?id=${bill.id}">Edit bill properties</a>
+                        <br>
                     </c:if>
                     Total: ${total} CZK
                 </div>
@@ -35,13 +43,13 @@
                                     <input type="hidden" name="item" value="${billItem.item.name}"/>
                                     <input type="hidden" name="user" value="${billItem.addedBy}"/>
                                     <input type="number" class="number-input" name="howMuch" value="0" min="${-billItem.quantity}" required/>
-                                    <input type="submit" class="btn btn-small btn-success" value="Change quantity">
+                                    <input type="submit" class="btn btn-small btn-success" value="+/- quantity">
                                 </form>
                                 <form action="/bills/changeItemPrice" method="put" class="change-item-price-form">
                                     <input type="hidden" name="id" value="${bill.id}"/>
                                     <input type="hidden" name="item" value="${billItem.item.name}"/>
                                     <input type="hidden" name="user" value="${billItem.addedBy}"/>
-                                    <input type="number" class="number-input" name="newPrice" value="0" min="0.01" step="0.01" required/>
+                                    <input type="number" class="number-input" name="newPrice" value="${billItem.price}" min="0.01" step="0.01" required/>
                                     <input type="submit" class="btn btn-small btn-success" value="Change price">
                                 </form>
                                 <a href="/bills/removeItem?id=${bill.id}&item=${billItem.item.name}&user=${billItem.addedBy}" id="remove-button" class="btn btn-small btn-danger">

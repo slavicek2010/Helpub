@@ -4,28 +4,24 @@ import cz.matyapav.models.Bill;
 import cz.matyapav.models.Item;
 import cz.matyapav.models.ItemBill;
 import cz.matyapav.models.User;
-import cz.matyapav.models.dao.GenericDao;
-import cz.matyapav.models.validators.BillValidator;
-import cz.matyapav.models.validators.Validator;
 import cz.matyapav.services.BillService;
 import cz.matyapav.services.ItemBillService;
 import cz.matyapav.services.ItemService;
 import cz.matyapav.services.UserService;
-import cz.matyapav.utils.ItemBillId;
 import cz.matyapav.utils.StatusMessages;
 import cz.matyapav.utils.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import javax.persistence.*;
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -52,11 +48,26 @@ public class BillController {
     ////
 
     @RequestMapping(value = "/bills", method = RequestMethod.GET)
-    public ModelAndView bills(ModelAndView model, HttpServletRequest request){
+    public ModelAndView bills(ModelAndView model, HttpServletRequest request, @RequestParam(name="username", required = false) String username){
         if(request.getParameter("errors") != null){
             model.addObject("errors", request.getParameter("errors"));
         }
-        List<Bill> billsList = billService.getAllBills();
+
+        List<Bill> billsList;
+        if(username != null){
+            User user = userService.getUser(username);
+            if(user != null){
+                billsList = billService.getBillsInWhichIsUserPartOf(user);
+                model.addObject("showBillsChecked", true);
+            }else{
+                //if user not found get all bills
+                model.addObject("showBillsChecked", false);
+                billsList = billService.getAllBills();
+            }
+        }else{
+            model.addObject("showBillsChecked", false);
+            billsList = billService.getAllBills();
+        }
         model.addObject("listBills", billsList);
         model.setViewName("bills");
         if(Utils.loggedUserIsAdmin()){
@@ -104,7 +115,7 @@ public class BillController {
         //validation conditions
         StatusMessages statusMessages = billService.editBill(bill);
         if(statusMessages.hasErrors()){
-            redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
+            request.setAttribute("errors", statusMessages.getErrors());
             setPropertiesToEditBillForm(model, bill);
             return model;
         }
@@ -201,7 +212,7 @@ public class BillController {
     }
 
     @RequestMapping(value = "/bills/create", method = RequestMethod.POST)
-    public ModelAndView addUser(@ModelAttribute("Bill") Bill bill, HttpServletRequest request, RedirectAttributes redirectAttributes) {
+    public ModelAndView createBill(@ModelAttribute("Bill") Bill bill, HttpServletRequest request, RedirectAttributes redirectAttributes) {
         //validation conditions
         StatusMessages statusMessages = billService.createBill(bill);
         if(statusMessages.hasErrors()){
@@ -226,16 +237,29 @@ public class BillController {
             if(bill == null){
                 model.setViewName("redirect:/bills");
                 statusMessages.addError("Bill not found.");
-                redirectAttributes.addFlashAttribute("errors", redirectAttributes);
+                redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
                 return model;
             }
+
             User loggedUser = userService.getUser(Utils.getLoggedUser().getUsername());
-            if(!Utils.loggedUserIsAdmin() && !loggedUser.isInBill(bill)){
-                model.setViewName("redirect:/bills");
-                statusMessages.addError("You don't have permission to see this bill.");
-                redirectAttributes.addFlashAttribute("errors", redirectAttributes);
+            if(!Utils.loggedUserIsAdmin() && !loggedUser.isInBill(bill) && bill.isLocked()){
+                model.addObject(new Bill());
+                model.addObject("billId", bill.getId());
+                model.setViewName("bill_password");
                 return model;
             }
+            StatusMessages statusMessages1 = billService.addLoggedUserToBill(bill);
+            if(statusMessages1.hasErrors()){
+                statusMessages.addMultipleErrors(statusMessages1.getErrors());
+                model.addObject("errors", statusMessages.getErrors());
+                return model;
+            }
+            if(statusMessages1.hasMessages()){
+                statusMessages.addMultipleMessages(statusMessages1.getMessages());
+                model.addObject("messages", statusMessages.getMessages());
+            }
+            bill = billService.getBill(bill.getId()); //TODO neupdatujou se hned po pridani useri .. fetchnu znovu z db
+
             model.setViewName("bill_show");
             model.addObject("bill", bill);
 
@@ -246,6 +270,7 @@ public class BillController {
             model.addObject("billItems", billItems);
             model.addObject("particularPrices", particularPricesForUsers);
             model.addObject("loggedUser", loggedUser);
+            model.addObject("billUsers", bill.getUsers());
             model.addObject("item", new Item());
             model.addObject("items", itemService.getAllItems());
             model.addObject("total", itemBillService.getBillTotalPrice(bill.getId()));
@@ -254,11 +279,60 @@ public class BillController {
             e.printStackTrace();
             model.setViewName("redirect:/bills");
             statusMessages.addError("Bill not found.");
-            redirectAttributes.addFlashAttribute("errors", redirectAttributes);
+            redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
             return model;
         }
     }
 
+    @RequestMapping(value = "/bills/addUser", method = RequestMethod.POST)
+    public ModelAndView addUserToBill(@ModelAttribute("Bill") Bill bill, HttpServletRequest request, RedirectAttributes redirectAttributes){
+        ModelAndView model = new ModelAndView();
+        try {
+            StatusMessages statusMessages = billService.addLoggedUserToBill(bill);
+            if(statusMessages.hasErrors()){
+                model.addObject(bill);
+                model.addObject("billId", bill.getId());
+                model.setViewName("bill_password");
+                request.setAttribute("errors", statusMessages.getErrors());
+                return model;
+            }
+            if(statusMessages.hasMessages()){
+                redirectAttributes.addFlashAttribute("messages", statusMessages.getMessages());
+            }
+            model.setViewName("redirect:/bills/show?id="+bill.getId());
+            return model;
+        }catch (NumberFormatException e) {
+            StatusMessages statusMessages = new StatusMessages();
+            model.setViewName("redirect:/bills");
+            statusMessages.addError("Bill not found.");
+            redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
+            return model;
+        }
+    }
+
+    @RequestMapping(value = "/bills/removeUser", method = RequestMethod.GET)
+    public ModelAndView removeUserFromBill(HttpServletRequest request, RedirectAttributes redirectAttributes){
+        ModelAndView model = new ModelAndView();
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            Bill bill = billService.getBill(id);
+            StatusMessages statusMessages = billService.removeLoggedUserFromBill(bill);
+            if(statusMessages.hasErrors()){
+                redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
+            }
+            if(statusMessages.hasMessages()){
+                redirectAttributes.addFlashAttribute("messages", statusMessages.getMessages());
+            }
+            model.setViewName("redirect:/bills");
+            return model;
+        }catch (NumberFormatException e) {
+            StatusMessages statusMessages = new StatusMessages();
+            model.setViewName("redirect:/bills");
+            statusMessages.addError("Bill not found.");
+            redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
+            return model;
+        }
+    }
     @RequestMapping(value = "/bills/delete", method = RequestMethod.GET)
     @Transactional
     public ModelAndView deleteBill(HttpServletRequest request, RedirectAttributes redirectAttributes) {
@@ -309,6 +383,50 @@ public class BillController {
         return model;
     }
 
+    @RequestMapping(value = "/bills/closeBill", method = RequestMethod.GET)
+    public ModelAndView closeBill(HttpServletRequest request, RedirectAttributes redirectAttributes){
+        ModelAndView model = new ModelAndView("redirect:/bills");
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            StatusMessages statusMessages = billService.closeBill(id);
+            if(statusMessages.hasErrors()){
+                redirectAttributes.addFlashAttribute("errors",statusMessages.getErrors());
+                return model;
+            }
+            if(statusMessages.hasMessages()){
+                redirectAttributes.addFlashAttribute("messages", statusMessages.getMessages());
+            }
+        }catch (NumberFormatException e){
+            e.printStackTrace();
+            StatusMessages statusMessages = new StatusMessages();
+            statusMessages.addError("Bill not found.");
+            redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
+        }
+        return model;
+    }
+
+    @RequestMapping(value = "/bills/reopenBill", method = RequestMethod.GET)
+    public ModelAndView reopenBill(HttpServletRequest request, RedirectAttributes redirectAttributes){
+        ModelAndView model = new ModelAndView("redirect:/bills");
+        try {
+            int id = Integer.parseInt(request.getParameter("id"));
+            StatusMessages statusMessages = billService.reopenBill(id);
+            if(statusMessages.hasErrors()){
+                redirectAttributes.addFlashAttribute("errors",statusMessages.getErrors());
+                return model;
+            }
+            if(statusMessages.hasMessages()){
+                redirectAttributes.addFlashAttribute("messages", statusMessages.getMessages());
+            }
+        }catch (NumberFormatException e){
+            e.printStackTrace();
+            StatusMessages statusMessages = new StatusMessages();
+            statusMessages.addError("Bill not found.");
+            redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
+        }
+        return model;
+    }
+
 
     private void setPropertiesToCreateBillForm(ModelAndView model, Bill bill){
         model.addObject("bill", bill);
@@ -326,4 +444,5 @@ public class BillController {
         model.addObject("loggedInUsername", Utils.getLoggedUser().getUsername());
         model.setViewName("bill_form");
     }
+
 }

@@ -16,21 +16,15 @@
                 <div class="col-md-4 col-md-offset-4">
                     <div class="login-panel panel panel-default">
                         <div class="panel-heading">
-                            <h3 class="panel-title">Create item</h3>
+                            <h3 class="panel-title">Enter password</h3>
                         </div>
                         <div class="panel-body">
-                            <form:form action="/items/create?billId=${billId}" method="post" modelAttribute="item">
-                                <div class="form-group">
-                                    Item name:<form:input class="form-control" path="name" required="required"/>
+                            <form:form action="/bills/addUser" method="post" modelAttribute="bill">
+                                <div class="form-group" id="password">
+                                    Password: <form:password class="form-control" path="password"/>
+                                    <form:hidden path="id" value="${billId}"/>
                                 </div>
-                                <div class="form-group">
-                                    Type:
-                                    <form:select path="type" required="required">
-                                        <form:option value="" label="*** Select Option ***" />
-                                        <form:options items="${enumValues}" itemLabel="typeName"/>
-                                    </form:select>
-                                </div>
-                                <input type="submit" class="btn btn-small btn-success btn-block" value="Save">
+                                <input type="submit" class="btn btn-small btn-success btn-block" value="Enter">
                             </form:form>
                         </div>
                     </div>

@@ -19,4 +19,9 @@ public enum ItemTypes {
     public String getTypeName() {
         return typeName;
     }
+
+    @Override
+    public String toString() {
+        return typeName;
+    }
 }

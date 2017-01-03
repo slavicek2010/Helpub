@@ -27,7 +27,7 @@ public class ItemService {
             validationFails = true;
         }
         if(itemDao.read(item.getName()) != null){
-            //user already exits
+            //item already exits
             statusMessages.addError("Item with that name already exits.");
             validationFails = true;
         }

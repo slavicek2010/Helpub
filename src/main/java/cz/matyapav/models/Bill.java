@@ -27,7 +27,7 @@ public class Bill {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     private Set<User> users = new HashSet<>();
 
     @Column(name="creator", nullable = false)
@@ -35,6 +35,16 @@ public class Bill {
 
     @Column(name="opened", nullable = false)
     private boolean opened;
+
+    @Column(name="locked", nullable = false)
+    private boolean locked;
+
+    @Column(name = "password", length = 60)
+    private String password;
+
+    @Transient
+    private String passwordRetype;
+
 
     public Bill() {
 
@@ -109,5 +119,37 @@ public class Bill {
             }
         }
         return false;
+    }
+
+    public boolean containsUserWithUsername(String username){
+        for(User user : getUsers()){
+            if(user.getUsername().equals(username)){
+                return true;
+            }
+        }
+        return false;
+    }
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getPasswordRetype() {
+        return passwordRetype;
+    }
+
+    public void setPasswordRetype(String passwordRetype) {
+        this.passwordRetype = passwordRetype;
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
     }
 }

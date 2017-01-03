@@ -27,6 +27,32 @@
                                     <form:hidden path="id"/>
                                 </c:if>
                                 <form:hidden path="creatorUsername" value="${loggedInUsername}"/>
+                                <c:if test="${bill.creatorUsername.equals(loggedInUsername)}">
+                                    <div class="form-group">
+                                        <label for="lockedCheckBox">Locked: </label>
+                                        <form:checkbox path="locked" id="lockedCheckBox"/>
+                                    </div>
+
+                                    <div class="form-group" id="password">
+                                        Password:<form:password class="form-control" path="password"/>
+                                    </div>
+                                    <div class="form-group" id="passwordRetype">
+                                        Retype Password: <form:password class="form-control" path="passwordRetype"/>
+                                    </div>
+                                </c:if>
+                                <script>
+                                    if($("#lockedCheckBox").is(":checked")){
+                                        $("#password").show();
+                                        $("#passwordRetype").show();
+                                    }else{
+                                        $("#password").hide();
+                                        $("#passwordRetype").hide();
+                                    }
+                                    $("#lockedCheckBox").change(function () {
+                                        $("#password").toggle();
+                                        $("#passwordRetype").toggle();
+                                    });
+                                </script>
                                 <input type="submit" class="btn btn-small btn-success btn-block" value="Save">
                             </form:form>
                         </div>
