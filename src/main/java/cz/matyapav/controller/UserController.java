@@ -145,6 +145,26 @@ public class UserController {
         return model;
     }
 
+    @RequestMapping(value = "/users/show", method = RequestMethod.GET)
+    public ModelAndView showUserDetails(HttpServletRequest request, RedirectAttributes redirectAttributes){
+        StatusMessages statusMessages = new StatusMessages();
+
+        if(request.getParameter("username") == null){
+            return new ModelAndView("redirect:/users");
+        }
+        User user = userService.getUser(request.getParameter("username"));
+
+        //TODO predelat do service kdyz bude cas
+        if(user == null){
+            statusMessages.addError("User not found.");
+            redirectAttributes.addFlashAttribute("errors", statusMessages.getErrors());
+            return new ModelAndView("redirect:/users");
+        }
+        ModelAndView model = new ModelAndView("user_show");
+        model.addObject("user", user);
+        return model;
+    }
+
     private void setPropertiesToUserEditForm(ModelAndView model, User user){
         model.addObject("user", user);
         model.addObject("formAction", "/users/edit");

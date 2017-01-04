@@ -33,6 +33,10 @@
                             </c:if>
                             <c:if test="${admin}">
                             <a href="/users/delete?username=${user.username}">Delete</a>
+                                &nbsp;&nbsp;&nbsp;&nbsp;
+                            </c:if>
+                            <c:if test="${admin}">
+                                <a href="/users/show?username=${user.username}">Show</a>
                             </c:if>
                         </td>
 
