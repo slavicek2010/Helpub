@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
+ * This class tests {@link ItemBillDao}
  * Created by Pavel on 05.01.2017.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -40,6 +41,11 @@ public class ItemBillDaoTest {
     @Autowired
     GenericDao<Item, String> itemDao;
 
+    /**
+     * Tests positive create and read - everything goes well
+     * ItemBill is stored in database and can be read
+     * @throws Exception
+     */
     @Test
     public void testCreateAndReadPositive() throws Exception {
         Bill bill = createBill();
@@ -57,6 +63,11 @@ public class ItemBillDaoTest {
         Assert.assertNotNull(itemBillDao.read(itemBill.getPrimaryKey()));
     }
 
+    /**
+     * Test negative create - part of primaryKey (added_by) is null
+     * ItemBill is no stored in database and {@link JpaSystemException} is expected
+     * @throws Exception
+     */
     @Test(expected = JpaSystemException.class)
     public void testCreateNegativeAddedByIsNull() throws Exception{
         Bill bill = createBill();
@@ -77,8 +88,13 @@ public class ItemBillDaoTest {
 
     }
 
+    /**
+     * Tests positive update - everything goes well
+     * ItemBill is successfully updated and next read returns updated values
+     * @throws Exception
+     */
     @Test
-    public void testUpdatePositive(){
+    public void testUpdatePositive() throws Exception{
         //create bill
         Bill bill = createBill();
         Item item = createItem();
@@ -101,8 +117,13 @@ public class ItemBillDaoTest {
         Assert.assertEquals(itemBillUpdated, itemBill);
     }
 
+    /**
+     * Tests positive remove - everything goes well
+     * ItemBill is removed, remove returns true and next read returns null
+     * @throws Exception
+     */
     @Test
-    public void testRemovePositive(){
+    public void testRemovePositive() throws Exception{
         //create itembill
         Bill bill = createBill();
         Item item = createItem();
@@ -120,35 +141,65 @@ public class ItemBillDaoTest {
         Assert.assertNull(itemBillDao.read(itemBill.getPrimaryKey()));
     }
 
+    /**
+     * Tests negative remove - itembill with desired id does not exist in db
+     * Nothing is deleted and remove operation returns false
+     * @throws Exception
+     */
     @Test
-    public void testRemoveNegativeNonExistingId(){
+    public void testRemoveNegativeNonExistingId() throws Exception {
         Assert.assertFalse(itemBillDao.delete(new ItemBillId()));
     }
 
+    /**
+     * Tests negative update - itembill is null
+     * Function should expect null argument
+     * @throws Exception
+     */
     @Test
-    public void testUpdateNegativeItemBillIsNull(){
+    public void testUpdateNegativeItemBillIsNull() throws Exception{
         ItemBill itemBill = null;
         itemBillDao.update(itemBill);
     }
 
+    /**
+     * Tests negative create - itembill is null
+     * Function should expect null argument
+     * @throws Exception
+     */
     @Test
-    public void testCreateNegativeItemBillIsNull(){
+    public void testCreateNegativeItemBillIsNull() throws Exception {
         ItemBill itemBill = null;
         itemBillDao.create(itemBill);
     }
 
+    /**
+     * Tests negative read - itembill id is null
+     * Function should expect null argument
+     * @throws Exception
+     */
     @Test
-    public void testReadNegativeItemBillIdIsNull(){
+    public void testReadNegativeItemBillIdIsNull() throws Exception {
         ItemBillId i = null;
         itemBillDao.read(i);
     }
 
+    /**
+     * Tests negative delete - itembill id is null
+     * Function should expect null argument
+     * @throws Exception
+     */
     @Test
-    public void testDeleteNegativeItemBillIdIsNull(){
+    public void testDeleteNegativeItemBillIdIsNull() throws Exception{
         ItemBillId i = null;
         itemBillDao.delete(i);
     }
 
+    /**
+     * Tests positive get bill items by bill id - everything goes well
+     * ItemBills connected with specified bill are returned
+     * @throws Exception
+     */
     @Test
     public void getBillItemsByBillId() throws Exception {
         //create itembill
@@ -167,18 +218,33 @@ public class ItemBillDaoTest {
         assertTrue(items.contains(itemBill));
     }
 
+    /**
+     * Tests negative get bill items by bill id - bill with specified id not found
+     * Should return empty collection
+     * @throws Exception
+     */
     @Test
     public void getBillItemsByBillIdNegativeBillNotFound() throws Exception {
         List<ItemBill> items = itemBillDao.getBillItemsByBillId(0);
         assertEquals(items.size(), 0);
     }
 
+    /**
+     * Tests negative get bill items by bill id - bill id is null
+     * Function should expect null argument
+     * @throws Exception
+     */
     @Test
     public void getBillItemsByBillIdNegativeBillIdNull() throws Exception {
         Integer i = null;
         itemBillDao.getBillItemsByBillId(i);
     }
 
+    /**
+     * Tests positive delete Item bills by bill id - everything goes well
+     * All ItemBills with specified bill id are removed
+     * @throws Exception
+     */
     @Test
     public void deleteBillItemsByBillId() throws Exception {
         //create itembill
@@ -200,6 +266,22 @@ public class ItemBillDaoTest {
         assertTrue(items.isEmpty());
     }
 
+    /**
+     * Tests negative delete item bills by specified bill id - bill id is null
+     * Function should expect null argument
+     * @throws Exception
+     */
+    @Test
+    public void deleteBillItemsByBillIdBillIdNull() throws Exception {
+        Integer i = null;
+        itemBillDao.deleteBillItemsByBillId(i);
+    }
+
+    /**
+     * Test positive get bill total price - everything goes well
+     * Total bill price should be returned
+     * @throws Exception
+     */
     @Test
     public void getBillTotalPrice() throws Exception {
         //create itembill
@@ -218,12 +300,21 @@ public class ItemBillDaoTest {
         assertEquals(price, 20, 1e-15);
     }
 
+    /**
+     * Test negative get total bill price - bill id is null
+     * Function should expect null argument
+     * @throws Exception
+     */
     @Test
     public void getBillTotalPriceNegativeBillIdNull() throws Exception {
         Integer i = null;
         itemBillDao.getBillItemsByBillId(i);
     }
 
+    /**
+     * Creates bill in db
+     * @return created bill
+     */
     private Bill createBill(){
         Bill bill = new Bill();
         bill.setName("testBill");
@@ -235,6 +326,10 @@ public class ItemBillDaoTest {
         return bill;
     }
 
+    /**
+     * Creates item in db
+     * @return created item
+     */
     private Item createItem(){
         Item item = new Item();
         item.setName("item");

@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.PersistenceException;
 /**
+ * This class tests BillDao
  * Created by Pavel on 05.01.2017.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -25,6 +26,11 @@ public class BillDaoTest {
     @Autowired
     GenericDao<Bill, Integer> billDao;
 
+    /**
+     * Tests positive create and read- everything goes well
+     * Bill is stored in database and can be read
+     * @throws Exception
+     */
     @Test
     public void testCreateAndReadPositive() throws Exception{
         Bill bill = new Bill();
@@ -37,6 +43,11 @@ public class BillDaoTest {
         Assert.assertNotNull(billDao.read(billdb.getId()));
     }
 
+    /**
+     * Tests negative create - billname is null
+     * Bill is not stored in database and {@link PersistenceException} is expected
+     * @throws Exception
+     */
     @Test(expected = PersistenceException.class)
     public void testCreateNegativeNameIsNull() throws Exception{
         Bill bill = new Bill();
@@ -51,6 +62,11 @@ public class BillDaoTest {
         TestTransaction.end();
     }
 
+    /**
+     * Tests negative create - creator username is null
+     * Bill is not stored in database and {@link PersistenceException } is expected
+     * @throws Exception
+     */
     @Test(expected = PersistenceException.class)
     public void testCreateNegativeCreatorUsernameIsNull() throws Exception{
         Bill bill = new Bill();
@@ -64,8 +80,13 @@ public class BillDaoTest {
         TestTransaction.end();
     }
 
+    /**
+     * Tests positive update - everything goes well
+     * Bill is successfully updated and next read reads updated values
+     * @throws Exception
+     */
     @Test
-    public void testUpdatePositive(){
+    public void testUpdatePositive() throws Exception{
         //create bill
         Bill bill = new Bill();
         bill.setName("testBill");
@@ -88,8 +109,13 @@ public class BillDaoTest {
         Assert.assertEquals(billDbUpdated, billdb);
     }
 
+    /**
+     * Tests positive remove - everything goes well
+     * Bill is removed, remove returns true and next read returns null
+     * @throws Exception
+     */
     @Test
-    public void testRemovePositive(){
+    public void testRemovePositive() throws Exception{
         //create bill
         Bill bill = new Bill();
         bill.setName("testBill");
@@ -103,31 +129,56 @@ public class BillDaoTest {
         Assert.assertNull(billDao.read(billdb.getId()));
     }
 
+    /**
+     * Tests negative remove - desired bill is not in db
+     * Nothing is removed and remove returns false
+     * @throws Exception
+     */
     @Test
-    public void testRemoveNegativeNonExistingId(){
+    public void testRemoveNegativeNonExistingId() throws Exception{
         Assert.assertFalse(billDao.delete(0));
     }
 
+    /**
+     * Tests negative update - bill is null
+     * Function should expect null argument
+     * @throws Exception
+     */
     @Test
-    public void testUpdateNegativeBillIsNull(){
+    public void testUpdateNegativeBillIsNull() throws Exception{
         Bill bill = null;
         billDao.update(bill);
     }
 
+    /**
+     * Tests negative create - bill is null
+     * Function should expect null argument
+     * @throws Exception
+     */
     @Test
-    public void testCreateNegativeBillIsNull(){
+    public void testCreateNegativeBillIsNull() throws Exception{
         Bill bill = null;
         billDao.create(bill);
     }
 
+    /**
+     * Tests negative read - bill id is null
+     * Function should expect null argument
+     * @throws Exception
+     */
     @Test
-    public void testReadNegativeBillIdIsNull(){
+    public void testReadNegativeBillIdIsNull() throws Exception{
         Integer i = null;
         billDao.read(i);
     }
 
+    /**
+     * Tests negative delete - bill id is null
+     * Function should expect null argument
+     * @throws Exception
+     */
     @Test
-    public void testDeleteNegativeBillIdIsNull(){
+    public void testDeleteNegativeBillIdIsNull() throws Exception{
         Integer i = null;
         billDao.delete(i);
     }

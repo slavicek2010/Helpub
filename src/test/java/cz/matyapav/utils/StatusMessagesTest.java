@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import static org.junit.Assert.*;
 
 /**
+ * This class tests StatusMessages class and its functions
  * Created by Pavel on 05.01.2017.
  */
 public class StatusMessagesTest {
@@ -19,6 +20,11 @@ public class StatusMessagesTest {
         statusMessages = new StatusMessages();
     }
 
+    /**
+     * Tests positive addition of error
+     * error is added to error messages
+     * @throws Exception
+     */
     @Test
     public void testAddError() throws Exception {
         String error = "error";
@@ -26,12 +32,22 @@ public class StatusMessagesTest {
         assertTrue(statusMessages.getErrors().contains(error));
     }
 
+    /**
+     * Tests negative addition of error - error is null
+     * function should expect null argument
+     * @throws Exception
+     */
     @Test
     public void testAddErrorNull() throws Exception {
         String error = null;
         statusMessages.addError(error);
     }
 
+    /**
+     * Tests positive addition of multiple errors
+     * all errors are added to error messages
+     * @throws Exception
+     */
     @Test
     public void testAddMultipleErrors() throws Exception {
         ArrayList<String> errors = new ArrayList<>();
@@ -44,12 +60,22 @@ public class StatusMessagesTest {
         assertTrue("contains error 2", statusMessages.getErrors().contains(error2));
     }
 
+    /**
+     * Tests negative addition of multiple errors - errors list is null
+     * Function should expect null argument
+     * @throws Exception
+     */
     @Test
     public void testAddMultipleErrorsNull() throws Exception {
         ArrayList<String> errors = null;
         statusMessages.addMultipleErrors(errors);
     }
 
+    /**
+     * Tests positive has errors
+     * errors are not empty should return true
+     * @throws Exception
+     */
     @Test
     public void testHasErrorsPositive() throws Exception {
         String error = "error";
@@ -57,11 +83,21 @@ public class StatusMessagesTest {
         assertTrue(statusMessages.hasErrors());
     }
 
+    /**
+     * Tests negative has errors
+     * errors are empty should return false
+     * @throws Exception
+     */
     @Test
     public void testHasErrorsNegative() throws Exception {
         assertFalse(statusMessages.hasErrors());
     }
 
+    /**
+     * Tests positive has messages
+     * messages are not empty should return true
+     * @throws Exception
+     */
     @Test
     public void testHasMessagesPositive() throws Exception {
         String message = "msg";
@@ -69,11 +105,21 @@ public class StatusMessagesTest {
         assertTrue(statusMessages.hasMessages());
     }
 
+    /**
+     * Tests negative has messages
+     * messages are empty should return false
+     * @throws Exception
+     */
     @Test
     public void testHasMessagesNegative() throws Exception {
         assertFalse(statusMessages.hasMessages());
     }
 
+    /**
+     * Tests positive addition of messages
+     * message is added to messages
+     * @throws Exception
+     */
     @Test
     public void testAddMessage() throws Exception {
         String message = "msg";
@@ -81,6 +127,11 @@ public class StatusMessagesTest {
         assertTrue(statusMessages.getMessages().contains(message));
     }
 
+    /**
+     * Tests positive addition of multiple messages
+     * all messages are added to messages
+     * @throws Exception
+     */
     @Test
     public void testAddMultipleMessages() throws Exception {
         ArrayList<String> messages = new ArrayList<>();
@@ -93,6 +144,11 @@ public class StatusMessagesTest {
         assertTrue("contains message 2", statusMessages.getMessages().contains(message2));
     }
 
+    /**
+     * Tests negative addition of multiple messages - messages list is null
+     * Function should expect null argument
+     * @throws Exception
+     */
     @Test
     public void testAddMultipleMessagesNull() throws Exception {
         ArrayList<String> messages = null;

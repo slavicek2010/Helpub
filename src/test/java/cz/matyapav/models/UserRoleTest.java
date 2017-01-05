@@ -6,6 +6,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
+ * This class tests UserRoleModel and its functions
  * Created by Pavel on 05.01.2017.
  */
 public class UserRoleTest {

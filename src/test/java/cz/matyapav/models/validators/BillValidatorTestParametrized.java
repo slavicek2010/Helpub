@@ -5,17 +5,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-
 import java.util.Arrays;
 import java.util.Collection;
-
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 
 /**
+ * This class tests BillValidator using JUnit parametrized tests
  * Created by Pavel on 05.01.2017.
  */
-
 @RunWith(Parameterized.class)
 public class BillValidatorTestParametrized {
 
@@ -39,6 +36,10 @@ public class BillValidatorTestParametrized {
         billValidator = new BillValidator();
     }
 
+    /**
+     * Defines parameters for test
+     * @return
+     */
     @Parameterized.Parameters
     public static Collection primeNumbers() {
         String longText = "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. " +
@@ -57,6 +58,11 @@ public class BillValidatorTestParametrized {
         });
     }
 
+    /**
+     * Tests bill validator with parameters listed above
+     * Defined expectedValues are expected
+     * @throws Exception
+     */
     @Test
     public void testValidateBill() throws Exception {
         Bill bill = new Bill();

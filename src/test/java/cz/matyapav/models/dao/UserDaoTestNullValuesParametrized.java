@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 /**
+ * This class tests UserDao Create with null values in fields using Junit parametrized tests
  * Created by Pavel on 05.01.2017.
  */
 @RunWith(Parameterized.class)
@@ -48,6 +49,10 @@ public class UserDaoTestNullValuesParametrized {
     @Parameterized.Parameter(4)
     public int enabled;
 
+    /**
+     * Defines parameters for test
+     * @return
+     */
     @Parameterized.Parameters
     public static Collection primeNumbers() {
         return Arrays.asList(new Object[][] {
@@ -58,6 +63,11 @@ public class UserDaoTestNullValuesParametrized {
         });
     }
 
+    /**
+     * Tests negative create - username, firstname, lastname or password is null
+     * User is not stored and {@link PersistenceException} is expected
+     * @throws Exception
+     */
     @Test(expected = PersistenceException.class)
     public void testCreateNegativeWithNullValues() throws Exception{
         User user = new User();

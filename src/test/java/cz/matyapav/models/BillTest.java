@@ -6,6 +6,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
+ * This class tests Bill model and its functions
  * Created by Pavel on 05.01.2017.
  */
 public class BillTest {
