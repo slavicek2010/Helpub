@@ -15,11 +15,11 @@ public class ItemBillId implements Serializable{
     public ItemBillId() {
     }
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.ALL, optional = false)
     @JoinColumn(name = "item_name")
     private Item item;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne(cascade = CascadeType.ALL, optional = false)
     @JoinColumn(name = "bill_id")
     private Bill bill;
 

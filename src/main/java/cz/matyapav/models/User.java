@@ -3,6 +3,7 @@ package cz.matyapav.models;
 import cz.matyapav.utils.Utils;
 
 import javax.persistence.*;
+import javax.validation.constraints.Size;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -27,6 +28,7 @@ public class User implements Serializable{
     private String lastName;
 
     @Column(name = "password", nullable = false, length = 60)
+    @Size(min = 8, max = 60)
     private String password;
 
     @Column(name = "enabled")
@@ -99,6 +101,14 @@ public class User implements Serializable{
         this.bills = bills;
     }
 
+    public void addBill(Bill bill) {
+        if(bill != null){
+            if(bills == null){
+                bills = new HashSet<>();
+            }
+            bills.add(bill);
+        }
+    }
 
     public void removeBill(Bill bill) {
         if (bill != null && bills != null && bills.contains(bill)) {

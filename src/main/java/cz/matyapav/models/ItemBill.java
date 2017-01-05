@@ -3,6 +3,7 @@ package cz.matyapav.models;
 import cz.matyapav.utils.ItemBillId;
 
 import javax.persistence.*;
+import javax.validation.constraints.Min;
 
 /**
  * Created by Pavel on 01.01.2017.
@@ -22,9 +23,11 @@ public class ItemBill {
     private ItemBillId primaryKey = new ItemBillId();
 
     @Column(name="price", nullable = false)
+    @Min(value = 0)
     private double price;
 
     @Column(name="quantity", nullable = false)
+    @Min(value = 0)
     private int quantity;
 
     public ItemBillId getPrimaryKey() {

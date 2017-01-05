@@ -1,14 +1,12 @@
 package cz.matyapav.models;
 
 import cz.matyapav.utils.Utils;
-import org.springframework.transaction.annotation.Transactional;
 /*TODO invite/add user to getBillForm ..spise add na invite nebude cas, ten se casem dodela
   mozna request to join + approve .. jenom join ne protoze to by se pak kdokoliv pripojil a delal by tam bordel*/
 
 import javax.persistence.*;
-import java.util.ArrayList;
+import javax.validation.constraints.Size;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -25,6 +23,7 @@ public class Bill {
     private int id;
 
     @Column(name = "name", nullable = false)
+    @Size(min = 1, max = 255)
     private String name;
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -39,7 +38,8 @@ public class Bill {
     @Column(name="locked", nullable = false)
     private boolean locked;
 
-    @Column(name = "password", length = 60)
+    @Column(name = "password")
+    @Size(min = 4, max = 60)
     private String password;
 
     @Transient
@@ -98,7 +98,10 @@ public class Bill {
     }
 
     public void addUser(User user) {
-        if (users != null && user != null) {
+        if (user != null) {
+            if(users == null){
+                users = new HashSet<>();
+            }
             users.add(user);
         }
     }
@@ -122,9 +125,11 @@ public class Bill {
     }
 
     public boolean containsUserWithUsername(String username){
-        for(User user : getUsers()){
-            if(user.getUsername().equals(username)){
-                return true;
+        if(users != null) {
+            for (User user : getUsers()) {
+                if (user.getUsername().equals(username)) {
+                    return true;
+                }
             }
         }
         return false;

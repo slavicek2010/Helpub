@@ -20,6 +20,7 @@ public class UserValidator extends Validator<User> {
         boolean withoutErrors = true;
 
         withoutErrors = validatePasswordMatch(user) &
+                        validatePasswordTooLong(user) &
                         validatePasswordLength(user) &
                         validateUsernameLength(user) &
                         validateFirstNameLength(user) &
@@ -28,7 +29,11 @@ public class UserValidator extends Validator<User> {
         return withoutErrors;
     }
 
-    public boolean validatePasswordMatch(User user){
+    private boolean validatePasswordMatch(User user){
+        if(user.getPassword() == null || user.getPasswordRetype() == null){
+            addErrorMessage("Password or password retype is not set.");
+            return false;
+        }
         if(user.getPassword() != null && user.getPasswordRetype() != null &&!user.getPassword().equals(user.getPasswordRetype())){
             addErrorMessage("Passwords do not match!!");
             return false;
@@ -36,33 +41,61 @@ public class UserValidator extends Validator<User> {
         return true;
     }
 
-    public boolean validatePasswordLength(User user){
-        if(user.getPassword() != null && user.getPassword().length() < 8){
+    private boolean validatePasswordLength(User user){
+        if(user.getPassword() == null){
+            addErrorMessage("Password is not set.");
+            return false;
+        }
+        if(user.getPassword().length() < 8){
             addErrorMessage("Passwords must be at least 8 characters long!!");
             return false;
         }
         return true;
     }
 
-    public boolean validateUsernameLength(User user){
-        if(user.getUsername() != null && user.getUsername().length() > 40){
+    private boolean validatePasswordTooLong(User user){
+        if(user.getPassword() == null){
+            addErrorMessage("Password is not set.");
+            return false;
+        }
+        if(user.getPassword().length() > 60){
+            addErrorMessage("Passwords can have no more than 60 characters long!!");
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validateUsernameLength(User user){
+        if(user.getUsername() == null){
+            addErrorMessage("Username is not set.");
+            return false;
+        }
+        if(user.getUsername().length() > 40){
             addErrorMessage("Username must have 40 chars max!!");
             return false;
         }
         return true;
     }
 
-    public boolean validateFirstNameLength(User user){
-        if(user.getFirstName() != null && user.getFirstName().length() > 80){
-            addErrorMessage("Firstname must have 80 chars max!!");
+    private boolean validateFirstNameLength(User user){
+        if(user.getFirstName() == null){
+            addErrorMessage("First name is not set.");
+            return false;
+        }
+        if(user.getFirstName().length() > 80){
+            addErrorMessage("First name must have 80 chars max!!");
             return false;
         }
         return true;
     }
 
-    public boolean validateLastNameLength(User user){
-        if(user.getLastName() != null && user.getLastName().length() > 80){
-            addErrorMessage("Lastname must have 80 chars max!!");
+    private boolean validateLastNameLength(User user){
+        if(user.getLastName() == null){
+            addErrorMessage("Last name is not set.");
+            return false;
+        }
+        if(user.getLastName().length() > 80){
+            addErrorMessage("Last name must have 80 chars max!!");
             return false;
         }
         return true;
