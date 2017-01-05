@@ -27,7 +27,7 @@
                                     <form:hidden path="id"/>
                                 </c:if>
                                 <form:hidden path="creatorUsername" value="${loggedInUsername}"/>
-                                <c:if test="${bill.creatorUsername.equals(loggedInUsername)}">
+                                <c:if test="${!editing || bill.creatorUsername.equals(loggedInUsername)}">
                                     <div class="form-group">
                                         <label for="lockedCheckBox">Locked: </label>
                                         <form:checkbox path="locked" id="lockedCheckBox"/>

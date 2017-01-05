@@ -433,6 +433,7 @@ public class BillController {
         model.addObject("formName", "New bill");
         model.addObject("formAction", "/bills/create");
         model.addObject("loggedInUsername", Utils.getLoggedUser().getUsername());
+        model.addObject("editing", false);
         model.setViewName("bill_form");
     }
 
@@ -442,6 +443,7 @@ public class BillController {
         model.addObject("formAction", "/bills/edit");
         model.addObject("includeId", true);
         model.addObject("loggedInUsername", Utils.getLoggedUser().getUsername());
+        model.addObject("editing", true);
         model.setViewName("bill_form");
     }
 

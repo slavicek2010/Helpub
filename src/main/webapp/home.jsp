@@ -13,6 +13,5 @@
         <h1>Welcome</h1>
         <a href="/users">Users</a>
         <a href="/bills">Bills</a>
-        <a href="/rest/users/all">Test REST</a>
     </jsp:body>
 </t:template>

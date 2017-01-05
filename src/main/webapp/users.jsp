@@ -39,7 +39,6 @@
                                 <a href="/users/show?username=${user.username}">Show</a>
                             </c:if>
                         </td>
-
                     </tr>
                 </c:forEach>
             </table>
