@@ -66,7 +66,7 @@
             <form:form action="/bills/addItem?id=${bill.id}" method="post" modelAttribute="item">
                 <div class="form-group">
                     Item:
-                    <form:select path="name" required="required">
+                    <form:select path="name" required="required" id="itemSelect">
                         <form:option value="" label="*** Select Item ***" />
                         <form:options items="${items}" />
                     </form:select>
@@ -78,7 +78,7 @@
                 <input type="submit" class="btn btn-small btn-success btn-block" value="Add">
             </form:form>
             Item not in the list?
-            <a href="/items/create?billId=${bill.id}">Add it here!</a>
+            <a href="/items/create?billId=${bill.id}" id="addNewItem">Add it here!</a>
         </div>
     </jsp:body>
 </t:template>

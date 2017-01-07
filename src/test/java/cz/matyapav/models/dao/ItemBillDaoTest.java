@@ -297,7 +297,7 @@ public class ItemBillDaoTest {
         itemBillDao.create(itemBill);
 
         double price = itemBillDao.getBillTotalPrice(bill.getId());
-        assertEquals(price, 20, 1e-15);
+        assertEquals(price, 400, 1e-15);
     }
 
     /**

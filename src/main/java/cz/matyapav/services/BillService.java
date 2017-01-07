@@ -285,12 +285,13 @@ public class BillService {
             statusMessages.addError("Bill not found.");
             return statusMessages;
         }
-        if(!billDB.isOpened()){
+
+        User loggedUser = userService.getUser(Utils.getLoggedUser().getUsername());
+        if(!billDB.isOpened() && !loggedUser.isInBill(billDB)) {
             statusMessages.addError("Can't join bill, because bill is CLOSED.");
             return statusMessages;
         }
-        User loggedUser = userService.getUser(Utils.getLoggedUser().getUsername());
-        if(!loggedUser.isInBill(billDB) ) {
+        if(!loggedUser.isInBill(billDB)) {
             if (billDB.isLocked() && !Utils.loggedUserIsAdmin()) {
                 String password = bill.getPassword();
                 BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -310,7 +311,6 @@ public class BillService {
                 return statusMessages;
             }
         }
-        statusMessages.addMessage("User is already connected with bill.");
         return statusMessages;
     }
 

@@ -17,37 +17,43 @@ public class BillValidator extends Validator<Bill> {
     }
 
     private boolean validatePasswordMatch(Bill bill){
-        if(bill.getPassword() == null || bill.getPasswordRetype() == null){
-            addErrorMessage("Password or password retype is not set!!");
-            return false;
-        }
-        if(bill.isLocked() && !bill.getPassword().equals(bill.getPasswordRetype())){
-            addErrorMessage("Passwords do not match!!");
-            return false;
+        if(bill.isLocked()) {
+            if (bill.getPassword() == null || bill.getPasswordRetype() == null) {
+                addErrorMessage("Password or password retype is not set!!");
+                return false;
+            }
+            if (!bill.getPassword().equals(bill.getPasswordRetype())) {
+                addErrorMessage("Passwords do not match!!");
+                return false;
+            }
         }
         return true;
     }
 
-    private boolean validatePasswordLength(Bill bill){
-        if(bill.getPassword() == null){
-            addErrorMessage("Password is not set!!");
-            return false;
-        }
-        if(bill.isLocked() && bill.getPassword().length() < 4){
-            addErrorMessage("Passwords must be at least 4 characters long!!");
-            return false;
+    private boolean validatePasswordLength(Bill bill) {
+        if(bill.isLocked()) {
+            if (bill.getPassword() == null) {
+                addErrorMessage("Password is not set!!");
+                return false;
+            }
+            if (bill.getPassword().length() < 4) {
+                addErrorMessage("Passwords must be at least 4 characters long!!");
+                return false;
+            }
         }
         return true;
     }
 
     private boolean validatePasswordTooLong(Bill bill){
-        if(bill.getPassword() == null){
-            addErrorMessage("Password is not set!!");
-            return false;
-        }
-        if(bill.isLocked() && bill.getPassword().length() > 60){
-            addErrorMessage("Passwords can contain no more than 255 characters long!!");
-            return false;
+        if(bill.isLocked()) {
+            if (bill.getPassword() == null) {
+                addErrorMessage("Password is not set!!");
+                return false;
+            }
+            if (bill.getPassword().length() > 60) {
+                addErrorMessage("Passwords can contain no more than 255 characters long!!");
+                return false;
+            }
         }
         return true;
     }

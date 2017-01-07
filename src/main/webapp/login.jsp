@@ -30,7 +30,7 @@
                                     <label for="password">Password</label>
                                     <input type="password" id="password" name="password" class="form-control" required/>
                                 </div>
-                                <input type="submit" value="Submit" class="btn btn-lg btn-success btn-block"/>
+                                <input type="submit" value="Submit" id="login" class="btn btn-lg btn-success btn-block"/>
                                 <input type="hidden" name="${_csrf.parameterName}"
                                        value="${_csrf.token}" />
                             </form:form>
@@ -39,7 +39,7 @@
                 </div>
             </div>
             Do not have account?
-            <a href="/users/create">Register here</a>
+            <a href="/users/create" id="signUp">Register here</a>
         </div>
 </jsp:body>
 </t:template>

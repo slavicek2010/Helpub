@@ -22,20 +22,20 @@
 
                             <form:form action="${formAction}" method="post" modelAttribute="user">
                                     <div class="form-group">
-                                       Username:<form:input class="form-control" readonly="${pkHidden}" path="username" required="required"/>
+                                       Username:<form:input class="form-control" id="username" readonly="${pkHidden}" path="username" required="required"/>
                                     </div>
                                     <div class="form-group">
-                                        First Name:<form:input class="form-control"  path="firstName" required="required"/>
+                                        First Name:<form:input class="form-control"  id="firstName" path="firstName" required="required"/>
                                     </div>
                                     <div class="form-group">
-                                        Last Name:<form:input class="form-control" path="lastName" required="required"/>
+                                        Last Name:<form:input class="form-control" id="lastName" path="lastName" required="required"/>
                                     </div>
                                     <c:if test="${!passwordFieldHidden}">
                                     <div class="form-group">
-                                        Password:<form:password class="form-control" path="password" required="required"/>
+                                        Password:<form:password class="form-control" id="password" path="password" required="required"/>
                                     </div>
                                     <tr class="form-group">
-                                        Retype Password:<form:password class="form-control" path="passwordRetype" required="required"/>
+                                        Retype Password:<form:password class="form-control" id="passwordRetype" path="passwordRetype" required="required"/>
                                     </tr>
                                     </c:if>
                                     <input type="submit" class="btn btn-small btn-success btn-block" value="Save">

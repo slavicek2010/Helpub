@@ -19,9 +19,9 @@
 <body>
 <div id="pageheader">
     <sec:authorize access="isAuthenticated()">
-        <sec:authentication property="principal.username" />
+        Logged in as: <span id="loggedAs"><sec:authentication property="principal.username" /></span>
         <sec:authentication property="principal.authorities" />
-        <a href="/logout" >Logout</a>
+        <a href="/logout" id="logout">Logout</a>
     </sec:authorize>
     <sec:authorize access="!isAuthenticated()">
         <a href="/login" >Log in</a>

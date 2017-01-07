@@ -11,7 +11,7 @@
 <t:template>
     <jsp:body>
         <h1>Welcome</h1>
-        <a href="/users">Users</a>
-        <a href="/bills">Bills</a>
+        <a href="/users" id="showUsers">Users</a>
+        <a href="/bills" id="showBills">Bills</a>
     </jsp:body>
 </t:template>
